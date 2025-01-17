@@ -16,6 +16,8 @@ class Main:
     def main(self):
         features, target = Main.getDataSetFromURL(self)
         print (f"Features: {features[0]} \n Target: {target[0]}")
+        
+
 
 # Erstelle eine Instanz der Klasse
 main_instance = Main()
