@@ -1,14 +1,14 @@
 from numpy import ndarray, vectorize, unique, where
 
 
-def getFeatureSize(self, features: ndarray, logging:bool = False):
+def getFeatureSize(self, features: ndarray, verbose:bool = False) -> int:
     """Return the number of features in the given dataset
 
     Parameters
     ----------
     features : ndarray
         The feature dataset
-    logging : bool, optional
+    verbose : bool, optional
         If True, print the result to the console (default is False)
 
     Returns
@@ -17,10 +17,10 @@ def getFeatureSize(self, features: ndarray, logging:bool = False):
         The number of features in the dataset
     """
 
-    logging and print(f"Number of features: {len(features[0])}")
+    verbose and print(f"Number of features: {len(features[0])}")
     return len(features[0])
 
-def getFeatureValues(self, features: ndarray, logging:bool = False):
+def getFeatureValues(self, features: ndarray, verbose:bool = False) ->list[set]:
     """
     Get unique values for each feature in the dataset.
 
@@ -32,7 +32,7 @@ def getFeatureValues(self, features: ndarray, logging:bool = False):
     ----------
     features : ndarray
         The feature dataset
-    logging : bool, optional
+    verbose : bool, optional
         If True, print the unique values for each feature to the console (default is False)
 
     Returns
@@ -40,16 +40,15 @@ def getFeatureValues(self, features: ndarray, logging:bool = False):
     List[Set]
         A list where each element is a set containing unique values for a specific feature
     """
-
     featureValues = list()
     for featureIndex in range (getFeatureSize(self, features)):
         featureValues.append(set())
         for feature in features:
             featureValues[featureIndex].add(feature[featureIndex])
-        logging and print(f"Values for feature number {featureIndex+1}: {featureValues[featureIndex]}")
+        verbose and print(f"Values for feature number {featureIndex+1}: {featureValues[featureIndex]}")
     return featureValues
 
-def getTargetValues(self, targets: ndarray, logging:bool = False):
+def getTargetValues(self, targets: ndarray, verbose:bool = False) -> set:
     """
     Get unique values for the target variable in the dataset.
 
@@ -59,7 +58,7 @@ def getTargetValues(self, targets: ndarray, logging:bool = False):
     ----------
     targets : ndarray
         The target dataset
-    logging : bool, optional
+    verbose : bool, optional
         If True, print the result to the console (default is False)
 
     Returns
@@ -68,10 +67,10 @@ def getTargetValues(self, targets: ndarray, logging:bool = False):
         A set containing unique values for the target variable
     """
     targetValues = unique(targets)
-    logging and print(f"Values for target: {targetValues}")
+    verbose and print(f"Values for target: {targetValues}")
     return targetValues
 
-def getComplianceAbsoluteFrequencies(self, featureIndex: int, featureValues: ndarray, targets: ndarray, logging:bool = False):
+def getComplianceAbsoluteFrequencies(self, featureIndex: int, featureValues: ndarray, targets: ndarray, verbose:bool = False) -> dict:
     """
     Calculate the absolute frequencies of target values for each unique feature value.
 
@@ -87,7 +86,7 @@ def getComplianceAbsoluteFrequencies(self, featureIndex: int, featureValues: nda
         The array containing the values of the feature for which frequencies are calculated.
     targets : ndarray
         The array containing the target values corresponding to each feature entry.
-    logging : bool, optional
+    verbose : bool, optional
         If True, print the absolute frequencies to the console (default is False).
 
     Returns
@@ -96,7 +95,6 @@ def getComplianceAbsoluteFrequencies(self, featureIndex: int, featureValues: nda
         A nested dictionary where the keys are unique feature values and the values are 
         dictionaries mapping target values to their absolute frequencies.
     """
-
     length = len(targets)
     complianceNumbers = dict()
     for feature in {*featureValues}:
@@ -106,10 +104,10 @@ def getComplianceAbsoluteFrequencies(self, featureIndex: int, featureValues: nda
 
     for i in range(length):
         complianceNumbers[featureValues[i]][str(targets[i])] += 1
-    logging and print(f"Compliance absolute frequencies for feature number {featureIndex+1}: {complianceNumbers}")
+    verbose and print(f"Compliance absolute frequencies for feature number {featureIndex+1}: {complianceNumbers}")
     return complianceNumbers
 
-def getComplianceRelativeFrequencies(self, featureIndex: int, featureValues: ndarray, targets: ndarray, logging:bool = False):
+def getComplianceRelativeFrequencies(self, featureIndex: int, featureValues: ndarray, targets: ndarray, verbose: bool = False) -> dict:
     """
     Calculate the relative frequencies of target values for each unique feature value.
 
@@ -125,7 +123,7 @@ def getComplianceRelativeFrequencies(self, featureIndex: int, featureValues: nda
         The array containing the values of the feature for which frequencies are calculated.
     targets : ndarray
         The array containing the target values corresponding to each feature entry.
-    logging : bool, optional
+    verbose : bool, optional
         If True, print the relative frequencies to the console (default is False).
 
     Returns
@@ -134,11 +132,10 @@ def getComplianceRelativeFrequencies(self, featureIndex: int, featureValues: nda
         A nested dictionary where the keys are unique feature values and the values are 
         dictionaries mapping target values to their relative frequencies as percentages.
     """
-
     length = len(targets)
-    complianceNumbers = getComplianceAbsoluteFrequencies(self,featureIndex, featureValues, targets)
-    complianceNumbers.update({feature: {target: f"{round(complianceNumbers[feature][target]*100 / length, 3)}%" for target in complianceNumbers[feature].keys()} for feature in complianceNumbers.keys()})
-    logging and print(f"Compliance relative frequencies for feature number {featureIndex+1}: {complianceNumbers}")
+    complianceNumbers = getComplianceAbsoluteFrequencies(self, featureIndex, featureValues, targets)
+    complianceNumbers.update({feature: {target: f"{round(complianceNumbers[feature][target] * 100 / length, 3)}%" for target in complianceNumbers[feature].keys()} for feature in complianceNumbers.keys()})
+    verbose and print(f"Compliance relative frequencies for feature number {featureIndex + 1}: {complianceNumbers}")
     return complianceNumbers
 
 
