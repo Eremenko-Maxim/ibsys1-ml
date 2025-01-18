@@ -28,7 +28,8 @@ def splitDataSet(self, features: ndarray, targets: ndarray, splitRatio: list[flo
     """
     # Check if the split ratios are valid
     if len(splitRatio) != 3 or sum(splitRatio) != 1.0:
-        raise ValueError("You must provide 3 split ratios and the sum of split ratios must be 1.0")
+        print("{c.RED}You must provide 3 split ratios and the sum of split ratios must be 1.0{c.RESET}")
+        exit(1)
 
     # Split the dataset into training set and temporary set (evaluation + test)
     x_train, x_temp, y_train, y_temp = train_test_split(

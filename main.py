@@ -1,7 +1,3 @@
-import numpy as np
-import pandas as pd
-from itertools import chain
-
 import ansi_escape_codes as c
 import dataSource
 import task1

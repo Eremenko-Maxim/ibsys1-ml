@@ -1,4 +1,5 @@
 from itertools import chain
+from multiprocessing import Value
 from typing import Tuple
 from numpy import ndarray
 import pandas as pd
@@ -6,9 +7,10 @@ import ansi_escape_codes as c
 
 
 def get_data_set_from_url(self) -> Tuple[ndarray, ndarray]:
-    """Retrieve a dataset from a given URL and split it into features and targets.
+    """
+    Retrieve a dataset from a given URL and split it into features and targets.
 
-    If no URL is provided, the default dataset 'Test00.txt' is used.
+    If no path is provided, the default dataset 'Test00.txt' is used.
 
     Returns
     -------
@@ -17,16 +19,29 @@ def get_data_set_from_url(self) -> Tuple[ndarray, ndarray]:
     targets : ndarray
         The target dataset
     """
-    file_path = input(f"{c.YELLOW}Type in the path to the dataset: {c.RESET}")
-    if not file_path:
-        file_path = "Test00.txt"
+    # Prompt the user to enter the dataset path
+    dataset_path = input(f"{c.YELLOW}Type in the path to the dataset: {c.RESET}")
 
-    data = pd.read_csv(file_path, delimiter=' ', header=None)
+    # If no path is provided, use the default dataset
+    if not dataset_path:
+        dataset_path = "Test00.txt"
 
-    features = data.iloc[:, :-1].values
-    targets = data.iloc[:, -1].str.strip(';').values
+    try:
+        # Read the dataset from the given path
+        dataset = pd.read_csv(dataset_path, delimiter=' ', header=None)
+    except FileNotFoundError:
+        # Raise an error if the file path is invalid
+        print(f"{c.RED}Invalid file path. Please try again.{c.RESET}")
+        exit(1)
 
-    return features, targets
+    # Extract the feature data from the dataset
+    feature_data = dataset.iloc[:, :-1].values
+
+    # Extract the target data from the dataset and strip the semicolon from the end
+    target_data = dataset.iloc[:, -1].str.strip(';').values
+
+    # Return the feature and target data
+    return feature_data, target_data
 
 def get_values_for_feature(self, index: int, features: ndarray) -> list:
     """
