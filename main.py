@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
 from itertools import chain
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
 
 import task1
 import task2
@@ -72,6 +70,10 @@ class Main:
         task1.getComplianceAbsoluteFrequencies(self, secondFeatureIndex, secondFeatureValues, targets, True)
         task1.getComplianceRelativeFrequencies(self, firstFeatureIndex, firstfeatureValues, targets, True)
         task1.getComplianceRelativeFrequencies(self, secondFeatureIndex, secondFeatureValues, targets, True)
+
+        training_ratio = float(input("Type in the training ratio: "))
+        eval_ratio = float(input("Type in the evaluation ratio: "))
+        x_train, x_eval, x_test, y_train, y_eval, y_test = task2.splitDataSet(self, features, targets, [training_ratio, eval_ratio, 1 - training_ratio - eval_ratio], True)
 
 
 # Erstelle eine Instanz der Klasse
