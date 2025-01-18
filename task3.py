@@ -1,6 +1,7 @@
 from numpy import ndarray
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.tree import DecisionTreeClassifier
+import ansi_escape_codes as c
 
 
 def intializeModel(verbose:bool = False) -> DecisionTreeClassifier:
@@ -22,25 +23,31 @@ def intializeModel(verbose:bool = False) -> DecisionTreeClassifier:
     verbose and print("Intializing decision tree model...")
     return DecisionTreeClassifier(random_state=42)
 
-def encode_data(self, features: ndarray, targets: ndarray) -> tuple[ndarray, ndarray]:
+def encode_data(self, features: ndarray = None, targets: ndarray = None) -> tuple[ndarray, ndarray]:
     """
-    Encode features and targets using an ordinal encoder.
+    Encode the given features and/or targets using an ordinal encoder.
 
     Parameters
     ----------
-    features : ndarray
-        Feature dataset
-    targets : ndarray
-        Target dataset
+    features : ndarray, optional
+        The feature dataset to be encoded (default is None)
+    targets : ndarray, optional
+        The target dataset to be encoded (default is None)
 
     Returns
     -------
     tuple[ndarray, ndarray]
-        Encoded features and targets
+        A tuple containing the encoded features and targets
     """
     encoder = OrdinalEncoder()
-    encoded_features = encoder.fit_transform(features)
-    encoded_targets = encoder.fit_transform(targets.reshape(-1, 1))
+    if features is not None: 
+        encoded_features = encoder.fit_transform(features) 
+    else: 
+        encoded_features = None
+    if targets is not None: 
+        encoded_targets = targets.reshape(-1, 1)
+    else:
+        encoded_targets = None
     return encoded_features, encoded_targets
 
 
@@ -59,7 +66,7 @@ def train_model(self, model: DecisionTreeClassifier, X_train: ndarray, y_train: 
     verbose : bool, optional
         If True, print messages indicating the training process (default is False).
     """
-    verbose and print(f"Training decision tree model with {len(X_train)} samples...")
+    verbose and print(f"Training decision tree model with {c.CYAN}{len(X_train)}{c.RESET} samples...")
     # Encode the features and targets using an ordinal encoder
     X_encoded, y_encoded = encode_data(self, X_train, y_train)
     verbose and print(f"Encoded features and targets.")
@@ -89,4 +96,4 @@ def evaluate_model(self, model: DecisionTreeClassifier, X_eval: ndarray, y_eval:
     X_encoded, y_encoded = encode_data(self, X_eval, y_eval)
     verbose and print("Evaluating model...")
     accuracy = model.score(X_encoded, y_encoded)
-    verbose and print(f"Accuracy: {accuracy:.3f}")
+    verbose and print(f"Accuracy: {c.CYAN}{accuracy*100:.6f}%{c.RESET}")

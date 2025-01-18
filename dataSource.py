@@ -2,6 +2,7 @@ from itertools import chain
 from typing import Tuple
 from numpy import ndarray
 import pandas as pd
+import ansi_escape_codes as c
 
 
 def get_data_set_from_url(self) -> Tuple[ndarray, ndarray]:
@@ -16,7 +17,7 @@ def get_data_set_from_url(self) -> Tuple[ndarray, ndarray]:
     targets : ndarray
         The target dataset
     """
-    file_path = input("Type in the path to the dataset: ")
+    file_path = input(f"{c.YELLOW}Type in the path to the dataset: {c.RESET}")
     if not file_path:
         file_path = "Test00.txt"
 
