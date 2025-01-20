@@ -1,25 +1,33 @@
-from numpy import ndarray, unique 
+from doctest import debug
+from math import log
+from venv import logger
+from numpy import unique 
+from pandas import DataFrame, Series
 import ansi_escape_codes as c
+import logging
 
-def getFeatureSize(self, features: ndarray, verbose:bool = False) -> int:
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%d.%m.%Y %H:%M:%S")
+
+def get_feature_size(features: DataFrame) -> int:
     """Return the number of features in the given dataset
 
     Parameters
     ----------
-    features : ndarray
+    features : DataFrame
         The feature dataset
-    verbose : bool, optional
-        If True, print the result to the console (default is False)
-
+    
     Returns
     -------
     int
         The number of features in the dataset
     """
-    verbose and print(f"Number of features: {c.CYAN}{len(features[0])}{c.RESET}")
-    return len(features[0])
+    feature_size = len(features.columns)
+    logging.info(f"Number of features: {c.CYAN}{feature_size}{c.RESET}")
+    return feature_size
 
-def getFeatureValues(self, features: ndarray, verbose:bool = False) -> list[set]:
+def get_feature_values(features: DataFrame) -> list[set]:
     """
     Get unique values for each feature in the dataset.
 
@@ -29,113 +37,83 @@ def getFeatureValues(self, features: ndarray, verbose:bool = False) -> list[set]
 
     Parameters
     ----------
-    features : ndarray
+    features : DataFrame
         The feature dataset
-    verbose : bool, optional
-        If True, print the unique values for each feature to the console (default is False)
-
+    
     Returns
     -------
     List[Set]
         A list where each element is a set containing unique values for a specific feature
     """
-    featureValues = list()
-    # Iterate over all features
-    for featureIndex in range (getFeatureSize(self, features)):
-        featureValues.append(set())
-        # Iterate over all data points and add unique values to the set
-        for feature in features:
-            featureValues[featureIndex].add(feature[featureIndex])
-        # Print the unique values for each feature if verbose is enabled
-        verbose and print(f"Values for feature number {c.CYAN}{featureIndex+1}{c.RESET}: {c.BLUE}{featureValues[featureIndex]}{c.RESET}")
-    return featureValues
+    feature_values = []
+    for feature_index, feature in enumerate(features.columns):
+        unique_values = set(features[feature].unique())
+        feature_values.append(unique_values)
+        logging.info(f"Values for feature number {c.CYAN}{feature_index + 1}{c.RESET}: {c.BLUE}{unique_values}{c.RESET}")
+    return feature_values
 
-def getTargetValues(self, targets: ndarray, verbose:bool = False) -> set:
+def get_target_values(targets: Series) -> set:
     """
     Get unique values for the target variable in the dataset.
 
-    This method collects unique values for the target variable into a set.
-
     Parameters
     ----------
-    targets : ndarray
-        The target dataset
-    verbose : bool, optional
-        If True, print the result to the console (default is False)
-
+    targets : DataFrame
+        The target dataset.
+    
     Returns
     -------
-    Set
-        A set containing unique values for the target variable
+    set
+        A set containing unique values for the target variable.
     """
-    targetValues = unique(targets)
-    # Print the result if verbose is enabled
-    verbose and print(f"Values for target: {c.BLUE}{targetValues}{c.RESET}")
-    return targetValues
+    unique_targets = set(targets.unique())
+    logging.info(f"Unique target values: {c.BLUE}{unique_targets}{c.RESET}")
+    return unique_targets
 
-def getComplianceAbsoluteFrequencies(self, featureIndex: int, featureValues: ndarray, targets: ndarray, verbose: bool = False) -> dict:
+def get_compliance_absolute_frequencies(feature: DataFrame, targets: Series) -> dict[str, dict[str, int]]:
     """
     Calculate the absolute frequencies of target values for each unique feature value.
 
-    This method creates a dictionary that maps each unique feature value to another 
+    This function creates a dictionary that maps each unique feature value to another 
     dictionary, which maps each unique target value to its count (frequency) of occurrence 
     for that feature value.
 
     Parameters
     ----------
-    featureIndex : int
-        The index of the feature in the dataset for which absolute frequencies are calculated.
-    featureValues : ndarray
-        The array containing the values of the feature for which frequencies are calculated.
-    targets : ndarray
-        The array containing the target values corresponding to each feature entry.
-    verbose : bool, optional
-        If True, print the absolute frequencies to the console (default is False).
-
+    feature : DataFrame
+        The feature dataset containing the values of the feature for which frequencies are calculated.
+    targets : DataFrame
+        The target dataset containing the target values corresponding to each feature entry.
+    
     Returns
     -------
-    dict
+    dict[str, dict[str, int]]
         A nested dictionary where the keys are unique feature values and the values are 
         dictionaries mapping target values to their absolute frequencies.
     """
-    length = len(targets)
     # Initialize the dictionary to store frequencies
-    complianceNumbers = dict()
-    # Set up the dictionary structure for features and targets
-    for feature in {*featureValues}:
-        complianceNumbers[feature] = dict()
-        for target in targets:
-            complianceNumbers[feature][str(target)] = 0
+    frequencies = {f_val: {str(target): 0 for target in targets} for f_val in {*feature}}
 
     # Count occurrences of each target value for each feature value
-    for i in range(length):
-        complianceNumbers[featureValues[i]][str(targets[i])] += 1
+    for f_val, target in zip(feature, targets):
+        frequencies[f_val][str(target)] += 1
 
-    # Print the frequencies if verbose is enabled
-    verbose and print(f"Compliance absolute frequencies for feature number {c.CYAN}{featureIndex+1}{c.RESET}: {c.BLUE}{complianceNumbers}{c.RESET}")
+    # Print the frequencies
+    logging.info(f"Absolute frequencies for {feature.name}: {frequencies}")
 
-    # Return the frequency dictionary
-    return complianceNumbers
+    return frequencies
 
-def getComplianceRelativeFrequencies(self, featureIndex: int, featureValues: ndarray, targets: ndarray, verbose: bool = False) -> dict:
+def get_compliance_relative_frequencies(feature_values: DataFrame, targets: Series) -> dict:
     """
     Calculate the relative frequencies of target values for each unique feature value.
 
-    This method computes the relative frequency (as a percentage) of each target value
-    for every unique feature value. The relative frequencies are derived from the absolute
-    frequencies obtained through `getComplianceAbsoluteFrequencies`.
-
     Parameters
     ----------
-    featureIndex : int
-        The index of the feature in the dataset for which relative frequencies are calculated.
-    featureValues : ndarray
-        The array containing the values of the feature for which frequencies are calculated.
-    targets : ndarray
-        The array containing the target values corresponding to each feature entry.
-    verbose : bool, optional
-        If True, print the relative frequencies to the console (default is False).
-
+    feature_values : DataFrame
+        The feature dataset containing the values of the feature for which frequencies are calculated.
+    targets : DataFrame
+        The target dataset containing the target values corresponding to each feature entry.
+    
     Returns
     -------
     dict
@@ -143,16 +121,21 @@ def getComplianceRelativeFrequencies(self, featureIndex: int, featureValues: nda
         dictionaries mapping target values to their relative frequencies as percentages.
     """
     # Calculate the absolute frequencies first
-    absoluteFrequencies = getComplianceAbsoluteFrequencies(self, featureIndex, featureValues, targets)
+    absolute_frequencies = get_compliance_absolute_frequencies(feature_values, targets)
 
     # Calculate the relative frequency for each target value
-    relativeFrequencies = {feature: {target: f"{round(absoluteFrequencies[feature][target] * 100 / len(targets), 3)}%" for target in absoluteFrequencies[feature].keys()} for feature in absoluteFrequencies.keys()}
-
-    # Print the relative frequencies to the console if verbose is enabled
-    verbose and print(f"Compliance relative frequencies for feature number {c.CYAN}{featureIndex + 1}{c.RESET}: {c.BLUE}{relativeFrequencies}{c.RESET}")
+    total_count = len(targets)
+    relative_frequencies = {}
+    for feature, target_freqs in absolute_frequencies.items():
+        relative_frequencies[feature] = {}
+        for target, count in target_freqs.items():
+            relative_frequencies[feature][target] = f"{round(count * 100 / total_count, 3)}%"
+    
+    # Print the relative frequencies if verbose is enabled
+    logging.info(f"Compliance relative frequencies: {relative_frequencies}")
 
     # Return the relative frequencies
-    return relativeFrequencies
+    return relative_frequencies
 
 
     

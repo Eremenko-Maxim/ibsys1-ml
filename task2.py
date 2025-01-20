@@ -1,12 +1,19 @@
-from numpy import ndarray
+from pandas import DataFrame, Series
 
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 
 import ansi_escape_codes as c
+import logging
 
+logging.basicConfig(
+    filename="log.txt",
+    filemode="w",
+    encoding="utf-8",
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%d.%m.%Y %H:%M:%S")
 
-def splitDataSet(self, features: ndarray, targets: ndarray, splitRatio: list[float], verbose: bool = False) -> tuple[ndarray, ndarray, ndarray, ndarray, ndarray, ndarray]:
+def splitDataSet(features: DataFrame, targets: Series, splitRatio: list[float]) -> tuple[DataFrame, DataFrame, DataFrame, Series, Series, Series]:
     """
     Split the dataset into training, evaluation, and test sets.
 
@@ -18,9 +25,7 @@ def splitDataSet(self, features: ndarray, targets: ndarray, splitRatio: list[flo
         The target dataset.
     splitRatio : list[float]
         The ratio of the dataset to be used for training, evaluation, and testing.
-    verbose : bool, optional
-        If True, print the split ratios and dataset shapes to the console (default is False).
-
+   
     Returns
     -------
     tuple[ndarray, ndarray, ndarray, ndarray, ndarray, ndarray]
@@ -28,7 +33,7 @@ def splitDataSet(self, features: ndarray, targets: ndarray, splitRatio: list[flo
     """
     # Check if the split ratios are valid
     if len(splitRatio) != 3 or sum(splitRatio) != 1.0:
-        print("{c.RED}You must provide 3 split ratios and the sum of split ratios must be 1.0{c.RESET}")
+        logging.fatal("{c.RED}You must provide 3 split ratios and the sum of split ratios must be 1.0{c.RESET}")
         exit(1)
 
     # Split the dataset into training set and temporary set (evaluation + test)
@@ -41,11 +46,11 @@ def splitDataSet(self, features: ndarray, targets: ndarray, splitRatio: list[flo
         x_temp, y_temp, test_size=splitRatio[2] / (splitRatio[1] + splitRatio[2]), random_state=42
     )
 
-    # Print the split ratios and shapes of the datasets if verbose is enabled
-    verbose and print(
+    # Print the split ratios and shapes of the datasets
+    logging.debug(
         f"Split ratios: {c.CYAN}{splitRatio[0]*100}%{c.RESET} for {c.RED}training{c.RESET}, {c.CYAN}{splitRatio[1]*100}%{c.RESET} for {c.RED}evaluation{c.RESET}, and {c.CYAN}{splitRatio[2]*100}%{c.RESET} for {c.RED}testing{c.RESET}"
     )
-    verbose and print(
+    logging.info(
         f"{c.BLUE}x_train{c.RESET}: {x_train.shape} \n{c.BLUE}x_eval{c.RESET}: {x_eval.shape} \n{c.BLUE}x_test{c.RESET}: {x_test.shape} \n{c.BLUE}y_train{c.RESET}: {y_train.shape} \n{c.BLUE}y_eval{c.RESET}: {y_eval.shape} \n{c.BLUE}y_test{c.RESET}: {y_test.shape}"
     )
 

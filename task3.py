@@ -1,86 +1,89 @@
-from numpy import ndarray
-from sklearn.preprocessing import OrdinalEncoder
-from sklearn.tree import DecisionTreeClassifier
+from typing import Tuple
+from numpy import unique, argmax
+from lightgbm import Booster, Dataset, train
+from pandas import DataFrame, Series
+from sklearn.metrics import accuracy_score, classification_report
+
 import ansi_escape_codes as c
+import logging
 
+logging.basicConfig(
+    filename="log.txt",
+    filemode="w",
+    encoding="utf-8",
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%d.%m.%Y %H:%M:%S")
 
-def intializeModel(verbose:bool = False) -> DecisionTreeClassifier:
+def code_targets(y_train: Series, y_eval: Series, y_test: Series) -> Tuple[Series, Series, Series]:
     """
-    Initialize a decision tree model with a fixed random state for reproducibility.
-
-    The model is initialized with a random state of 42 for reproducibility.
+    Encode the target values of the training, evaluation, and test datasets as codes.
 
     Parameters
     ----------
-    verbose : bool, optional
-        If True, print the message "Intializing decision tree model..." to the console (default is False)
+    y_train : Series
+        The target dataset for training.
+    y_eval : Series
+        The target dataset for evaluation.
+    y_test : Series
+        The target dataset for testing.
 
     Returns
     -------
-    DecisionTreeClassifier
-        The initialized model
+    Tuple[Series, Series, Series]
+        A tuple containing the encoded target datasets for training, evaluation, and testing.
     """
-    verbose and print("Intializing decision tree model...")
-    return DecisionTreeClassifier(random_state=42)
+    logging.debug("Encoding target values...")
+    y_train_encoded = y_train.cat.codes
+    y_eval_encoded = y_eval.cat.codes
+    y_test_encoded = y_test.cat.codes
+    return y_train_encoded, y_eval_encoded, y_test_encoded
 
-def encode_data(self, features: ndarray = None, targets: ndarray = None) -> tuple[ndarray, ndarray]:
-    """
-    Encode the given features and/or targets using an ordinal encoder.
-
-    Parameters
-    ----------
-    features : ndarray, optional
-        The feature dataset to be encoded (default is None)
-    targets : ndarray, optional
-        The target dataset to be encoded (default is None)
-
-    Returns
-    -------
-    tuple[ndarray, ndarray]
-        A tuple containing the encoded features and targets
-    """
-    encoder = OrdinalEncoder()
-    if features is not None: 
-        encoded_features = encoder.fit_transform(features) 
-    else: 
-        encoded_features = None
-    if targets is not None: 
-        encoded_targets = targets.reshape(-1, 1)
-    else:
-        encoded_targets = None
-    return encoded_features, encoded_targets
-
-
-def train_model(self, model: DecisionTreeClassifier, X_train: ndarray, y_train: ndarray, verbose: bool = False) -> None:
+def get_trained_model(X_train: DataFrame, y_train: Series) -> Booster:
     """
     Train the decision tree model using the provided training dataset.
 
+    This function trains a LightGBM model using the provided training dataset and
+    returns the trained model.
+
     Parameters
     ----------
-    model : DecisionTreeClassifier
-        The decision tree model to be trained.
     X_train : ndarray
         The training feature dataset.
     y_train : ndarray
         The training target dataset.
-    verbose : bool, optional
-        If True, print messages indicating the training process (default is False).
-    """
-    verbose and print(f"Training decision tree model with {c.CYAN}{len(X_train)}{c.RESET} samples...")
-    # Encode the features and targets using an ordinal encoder
-    X_encoded, y_encoded = encode_data(self, X_train, y_train)
-    verbose and print(f"Encoded features and targets.")
-    # Train the decision tree model
-    model.fit(X_encoded, y_encoded)
-    verbose and print(f"Finished training the decision tree model.")
 
-def evaluate_model(self, model: DecisionTreeClassifier, X_eval: ndarray, y_eval: ndarray, verbose: bool = False) -> None:
+    Returns
+    -------
+    Booster
+        The trained LightGBM model.
+    """
+    # Set up the parameters for the LightGBM model
+    params = {
+        'objective': 'multiclass',
+        'metric': 'multi_logloss',
+        'learning_rate': 0.1,
+        'max_depth': -1,
+        'num_class': len(unique(y_train))
+    }
+    # Print a message indicating the start of the training process
+    logging.debug(f"Training LightGBM model with {c.CYAN}{len(X_train)}{c.RESET} samples...")
+
+    # Train the LightGBM model using the provided training dataset
+    model = train(params, train_set=Dataset(X_train, label=y_train))
+    # Print a message indicating the finish of the training process if verbose is enabled
+    logging.debug(f"Finished training LightGBM model.")
+    # Return the trained model
+    return model
+
+def evaluate_model(model: Booster, X_eval: DataFrame, y_eval: Series) -> None:
     """
     Evaluate the decision tree model using the provided evaluation dataset.
 
+    This function evaluates the decision tree model using the provided evaluation dataset and calculates the accuracy.
+
     Parameters
     ----------
-    model : DecisionTreeClassifier
+    model : CatBoostClassifier
         The decision tree model to be evaluated.
     X_eval : ndarray
         The evaluation feature dataset.
@@ -93,7 +96,12 @@ def evaluate_model(self, model: DecisionTreeClassifier, X_eval: ndarray, y_eval:
     -------
     None
     """
-    X_encoded, y_encoded = encode_data(self, X_eval, y_eval)
-    verbose and print("Evaluating model...")
-    accuracy = model.score(X_encoded, y_encoded)
-    verbose and print(f"Accuracy: {c.CYAN}{accuracy*100:.6f}%{c.RESET}")
+    logging.debug("Evaluating model...")
+    y_pred = argmax(model.predict(X_eval), axis=1) 
+    print(y_pred)
+    print(y_eval)
+    # Evaluate the model using the evaluation dataset
+    accuracy = accuracy_score(y_eval, y_pred)
+    # Print the accuracy to the console
+    logging.info(f"Accuracy: {c.CYAN}{accuracy*100:.6f}%{c.RESET}")
+    print(classification_report(y_eval, y_pred))
