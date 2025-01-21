@@ -12,6 +12,9 @@ def code_targets(y_train: Series, y_eval: Series, y_test: Series) -> Tuple[Serie
     """
     Encode the target values of the training, evaluation, and test datasets as codes.
 
+    This function transforms categorical target values into integer codes for the training,
+    evaluation, and test datasets.
+
     Parameters
     ----------
     y_train : Series
@@ -26,10 +29,19 @@ def code_targets(y_train: Series, y_eval: Series, y_test: Series) -> Tuple[Serie
     Tuple[Series, Series, Series]
         A tuple containing the encoded target datasets for training, evaluation, and testing.
     """
+    # Log the start of the encoding process
     logger.info("Encoding target values...")
+
+    # Encode the target values for the training dataset
     y_train_encoded = y_train.cat.codes
+
+    # Encode the target values for the evaluation dataset
     y_eval_encoded = y_eval.cat.codes
+
+    # Encode the target values for the test dataset
     y_test_encoded = y_test.cat.codes
+
+    # Return the encoded target values as a tuple
     return y_train_encoded, y_eval_encoded, y_test_encoded
 
 def get_trained_model(X_train: DataFrame, y_train: Series) -> Booster:
@@ -69,6 +81,7 @@ def get_trained_model(X_train: DataFrame, y_train: Series) -> Booster:
 
     # Train the LightGBM model using the provided training dataset
     model = train(params, train_set=dataset)
+
     # Print a message indicating the finish of the training process if verbose is enabled
     logger.info(f"Finished training LightGBM model.")
     # Return the trained model
@@ -85,10 +98,8 @@ def evaluate_model(model: Booster, X_eval: DataFrame, y_eval: Series) -> None:
     model : Booster
         The decision tree model to be evaluated.
     X_eval : DataFrame
-    X_eval : ndarray
         The evaluation feature dataset.
     y_eval : Series
-    y_eval : ndarray
         The evaluation target dataset.
 
     Returns
@@ -97,7 +108,7 @@ def evaluate_model(model: Booster, X_eval: DataFrame, y_eval: Series) -> None:
     """
     logger.info("Evaluating model...")
 
-    # Get the predictions from the model
+    # Predict target values for the evaluation dataset
     y_pred_prob = model.predict(X_eval)
 
     # Convert the predictions to binary values
