@@ -1,14 +1,7 @@
-from doctest import debug
-from math import log
-from venv import logger
 from numpy import unique 
 from pandas import DataFrame, Series
 import ansi_escape_codes as c
-import logging
-
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%d.%m.%Y %H:%M:%S")
+from logger_config import logger
 
 def get_feature_size(features: DataFrame) -> int:
     """Return the number of features in the given dataset
@@ -24,7 +17,7 @@ def get_feature_size(features: DataFrame) -> int:
         The number of features in the dataset
     """
     feature_size = len(features.columns)
-    logging.info(f"Number of features: {c.CYAN}{feature_size}{c.RESET}")
+    logger.info(f"Number of features: {c.CYAN}{feature_size}{c.RESET}")
     return feature_size
 
 def get_feature_values(features: DataFrame) -> list[set]:
@@ -49,7 +42,7 @@ def get_feature_values(features: DataFrame) -> list[set]:
     for feature_index, feature in enumerate(features.columns):
         unique_values = set(features[feature].unique())
         feature_values.append(unique_values)
-        logging.info(f"Values for feature number {c.CYAN}{feature_index + 1}{c.RESET}: {c.BLUE}{unique_values}{c.RESET}")
+        logger.info(f"Values for {c.CYAN}{feature.title()}{c.RESET}: {c.BLUE}{unique_values}{c.RESET}")
     return feature_values
 
 def get_target_values(targets: Series) -> set:
@@ -67,10 +60,10 @@ def get_target_values(targets: Series) -> set:
         A set containing unique values for the target variable.
     """
     unique_targets = set(targets.unique())
-    logging.info(f"Unique target values: {c.BLUE}{unique_targets}{c.RESET}")
+    logger.info(f"Unique target values: {c.BLUE}{unique_targets}{c.RESET}")
     return unique_targets
 
-def get_compliance_absolute_frequencies(feature: DataFrame, targets: Series) -> dict[str, dict[str, int]]:
+def get_compliance_absolute_frequencies(feature_values: DataFrame, target_values: Series) -> dict[str, dict[str, int]]:
     """
     Calculate the absolute frequencies of target values for each unique feature value.
 
@@ -92,50 +85,46 @@ def get_compliance_absolute_frequencies(feature: DataFrame, targets: Series) -> 
         dictionaries mapping target values to their absolute frequencies.
     """
     # Initialize the dictionary to store frequencies
-    frequencies = {f_val: {str(target): 0 for target in targets} for f_val in {*feature}}
+    frequencies = {f_val: {str(target): 0 for target in target_values} for f_val in {*feature_values}}
 
     # Count occurrences of each target value for each feature value
-    for f_val, target in zip(feature, targets):
+    for f_val, target in zip(feature_values, target_values):
         frequencies[f_val][str(target)] += 1
 
     # Print the frequencies
-    logging.info(f"Absolute frequencies for {feature.name}: {frequencies}")
+    logger.info(f"Absolute frequencies for {c.CYAN}{feature_values.name}{c.RESET}: {c.BLUE}{frequencies}{c.RESET}")
 
     return frequencies
 
-def get_compliance_relative_frequencies(feature_values: DataFrame, targets: Series) -> dict:
+def get_compliance_frequencies(feature_values: Series, target_values: Series) -> None:
     """
     Calculate the relative frequencies of target values for each unique feature value.
 
     Parameters
     ----------
-    feature_values : DataFrame
-        The feature dataset containing the values of the feature for which frequencies are calculated.
-    targets : DataFrame
-        The target dataset containing the target values corresponding to each feature entry.
-    
+    feature_values : Series
+        The feature values for which frequencies are calculated.
+    target_values : Series
+        The target values corresponding to each feature entry.
+
     Returns
     -------
-    dict
-        A nested dictionary where the keys are unique feature values and the values are 
+    dict[str, dict[str, str]]
+        A nested dictionary where the keys are unique feature values and the values are
         dictionaries mapping target values to their relative frequencies as percentages.
     """
     # Calculate the absolute frequencies first
-    absolute_frequencies = get_compliance_absolute_frequencies(feature_values, targets)
+    absolute_frequencies = get_compliance_absolute_frequencies(feature_values, target_values)
 
     # Calculate the relative frequency for each target value
-    total_count = len(targets)
     relative_frequencies = {}
-    for feature, target_freqs in absolute_frequencies.items():
-        relative_frequencies[feature] = {}
-        for target, count in target_freqs.items():
-            relative_frequencies[feature][target] = f"{round(count * 100 / total_count, 3)}%"
+    for feature_value, target_freqs in absolute_frequencies.items():
+        relative_frequencies[feature_value] = {}
+        for target_value, count in target_freqs.items():
+            relative_frequencies[feature_value][target_value] = f"{count / len(target_values) * 100:.3f}%"
     
-    # Print the relative frequencies if verbose is enabled
-    logging.info(f"Compliance relative frequencies: {relative_frequencies}")
-
-    # Return the relative frequencies
-    return relative_frequencies
+     # Print the frequencies
+    logger.info(f"Relative frequencies for {c.CYAN}{feature_values.name}{c.RESET}: {c.BLUE}{relative_frequencies}{c.RESET}")
 
 
     

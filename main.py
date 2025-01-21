@@ -1,4 +1,3 @@
-from re import split
 import ansi_escape_codes as c
 import dataSource
 import task1
@@ -20,10 +19,8 @@ class Main:
         task1.get_target_values(targets)
 
         # Calculate compliance frequencies for the features
-        task1.get_compliance_absolute_frequencies(features['Feature 1'], targets)
-        task1.get_compliance_relative_frequencies(features['Feature 1'], targets)
-        task1.get_compliance_absolute_frequencies(features['Feature 2'], targets)
-        task1.get_compliance_relative_frequencies(features['Feature 2'], targets)
+        task1.get_compliance_frequencies(features['Feature_1'], targets)
+        task1.get_compliance_frequencies(features['Feature_2'], targets)
 
         # Input training and evaluation ratios
         training_ratio = input(f"{c.YELLOW}Type in the {c.RED}training{c.YELLOW} ratio: {c.RESET}")
@@ -39,26 +36,19 @@ class Main:
             eval_ratio = float(eval_ratio)
 
         # Split the dataset into training, evaluation, and test sets
-        x_train, x_eval, x_test, y_train, y_eval, y_test = task2.splitDataSet(features, targets, [training_ratio, eval_ratio, 1 - training_ratio - eval_ratio])
+        X_train, X_eval, X_test, y_train, y_eval, y_test = task2.splitDataSet(features, targets, [training_ratio, eval_ratio, 1 - training_ratio - eval_ratio])
 
         # Encode the target values of the training, evaluation, and test datasets
         y_train_encoded, y_eval_encoded, y_test_encoded = task3.code_targets(y_train, y_eval, y_test)
         # Initialize, train and evaluate the LightGBM model
-        model = task3.get_trained_model(x_train, y_train_encoded)
-        task3.evaluate_model(model, x_eval, y_eval_encoded)
-
-        # Input desired depth for the decision tree visualization
-        depth = input("Type in the desired depth: ")
-        if not depth:
-            depth = 3
-        else:
-            depth = int(depth)
+        model = task3.get_trained_model(X_train, y_train_encoded)
+        task3.evaluate_model(model, X_eval, y_eval_encoded)
 
         # Visualize the decision tree
-        task4.visualizeTree(depth, model)
+        task4.visualizeTree(model)
         
         # Predict and generate confusion matrices for the datasets
-        y_train_pred, y_eval_pred, y_test_pred = task4.predict(model, x_train, x_eval, x_test)
+        y_train_pred, y_eval_pred, y_test_pred = task4.predict(model, X_train, X_eval, X_test)
         task4.generate_confusion_matrix(y_train_encoded, y_train_pred, y_eval_encoded, y_eval_pred, y_test_encoded, y_test_pred)
 
 

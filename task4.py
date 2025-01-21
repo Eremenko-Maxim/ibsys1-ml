@@ -1,26 +1,15 @@
-from base64 import decode
-from lightgbm import Booster, create_tree_digraph, plot_tree
+from lightgbm import Booster, plot_tree
 import matplotlib.pyplot as plt
-from numpy import argmax, array, ndarray
+from numpy import ndarray
 from pandas import DataFrame, Series
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
-from sklearn.ensemble import RandomForestClassifier
 
 import ansi_escape_codes as c
-import logging
+from logger_config import logger
 
-import graphviz
 import os
-from sklearn import tree
 
-logging.basicConfig(
-    filename="log.txt",
-    filemode="w",
-    encoding="utf-8",
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%d.%m.%Y %H:%M:%S")
-
-def visualizeTree(depth: int, model: Booster) -> None:
+def visualizeTree(model: Booster) -> None:
     """Visualize the decision tree
 
     This function renders a visual representation of the decision tree
@@ -41,20 +30,18 @@ def visualizeTree(depth: int, model: Booster) -> None:
     None
     """
     # Check if a previous visualization exists and remove it
-    if os.path.exists(f"./images/tree_with_depth_{depth}.png"):
-        os.remove(f"./images/tree_with_depth_{depth}.png")
-        logging.debug(f"Old file {c.MAGENTA}tree_with_depth_{depth}.png{c.RESET} has been successfully deleted.")
+    if os.path.exists(f"./images/tree.png"):
+        os.remove(f"./images/tree.png")
+        logger.info(f"Old file {c.MAGENTA}tree.png{c.RESET} has been successfully deleted.")
 
-    logging.debug("Visualizing decision tree...")
+    logger.info("Visualizing decision tree...")
 
-    graph = create_tree_digraph(model)
+    plt.figure(figsize=(20, 10))
+    plot_tree(model, tree_index=0)
+    plt.savefig("./images/tree.png", dpi=300)
 
     # Render the graph as a PNG image and save it
-    graph.render(filename=f"tree_with_depth_{depth}", directory="./images", format="png")
-    logging.info(f"Decision tree with depth {c.CYAN}{depth}{c.RESET} saved at {c.MAGENTA}./images/tree_with_depth_{depth}.png{c.RESET}")
-
-    # Remove the intermediate dot file created by Graphviz
-    os.remove(f"./images/tree_with_depth_{depth}")
+    logger.info(f"Decision tree saved at {c.MAGENTA}./images/tree.png{c.RESET}")
 
 def predict(model: Booster, X_train: DataFrame, X_eval: DataFrame, X_test: DataFrame) -> tuple[Series, Series, Series]:
     """
@@ -62,29 +49,30 @@ def predict(model: Booster, X_train: DataFrame, X_eval: DataFrame, X_test: DataF
 
     Parameters
     ----------
-    model : DecisionTreeClassifier
-        The decision tree model to be used for prediction
-    x_train : ndarray
+    model : Booster
+        The LightGBM model to be used for prediction
+    X_train : DataFrame
         The feature dataset for which to predict the target values for training
-    x_eval : ndarray
+    X_eval : DataFrame
         The feature dataset for which to predict the target values for evaluation
-    x_test : ndarray
+    X_test : DataFrame
         The feature dataset for which to predict the target values for testing
-    verbose : bool, optional
-        If True, print the message "Predicting target values..." to the console (default is False)
 
     Returns
     -------
-    tuple[ndarray, ndarray, ndarray]
+    tuple[Series, Series, Series]
         A tuple containing the predicted target values for training, evaluation and testing
     """
     # Predict the target values using the given model and feature datasets
-    logging.debug("Predicting target values...")
+    logger.info("Predicting target values...")
 
     # Use the model to predict the target values for each dataset
-    y_train_pred = argmax(model.predict(X_train), axis=1)
-    y_val_pred = argmax(model.predict(X_eval), axis=1)
-    y_test_pred = argmax(model.predict(X_test), axis=1)
+    y_train_pred = (model.predict(X_train) > 0.5).astype(int)
+    y_val_pred = (model.predict(X_eval) > 0.5).astype(int)
+    y_test_pred = (model.predict(X_test) > 0.5).astype(int)
+
+    # Plot the decision tree
+    plot_tree(model)
 
     # Return the predicted target values as a tuple
     return y_train_pred, y_val_pred, y_test_pred
@@ -120,7 +108,7 @@ def generate_confusion_matrix(y_train: Series, y_train_pred: ndarray, y_eval: Se
     confusion_matrix_test = confusion_matrix(y_true=y_test, y_pred=y_test_pred)
 
     # Print message if verbose is enabled
-    logging.debug("Confusion matrices have been calculated.")
+    logger.info("Confusion matrices have been calculated.")
 
     # Save confusion matrices to files
     save_confusion_matrix(confusion_matrix_train, "training_data")
@@ -156,10 +144,10 @@ def save_confusion_matrix(confusion_matrix: ndarray, title: str) -> None:
     # Check if the file exists, and if it does, delete it
     if os.path.exists(f"./images/confusion_matrix{title}.png"):
         os.remove(f"./images/confusion_matrix{title}.png")
-        logging.debug(f"Old file {c.MAGENTA}confusion_matrix{title}.png{c.RESET} has been successfully deleted.")
+        logger.info(f"Old file {c.MAGENTA}confusion_matrix{title}.png{c.RESET} has been successfully deleted.")
 
     # Save the confusion matrix to a file
     plt.savefig(f"./images/confusion_matrix_{title}.png")
 
     # Print a message indicating that the confusion matrix has been saved
-    logging.info(f"Confusion matrix saved at {c.MAGENTA}./images/confusion_matrix_{title}.png{c.RESET}")
+    logger.info(f"Confusion matrix saved at {c.MAGENTA}./images/confusion_matrix_{title}.png{c.RESET}")
