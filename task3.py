@@ -1,9 +1,7 @@
-from re import X
 from typing import Tuple
-from numpy import unique, argmax
 from lightgbm import Booster, Dataset, train
 from pandas import DataFrame, Series
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score
 
 import ansi_escape_codes as c
 from logger_config import logger

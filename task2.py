@@ -1,4 +1,3 @@
-from re import X
 from pandas import DataFrame, Series
 
 from sklearn.datasets import load_iris
