@@ -43,10 +43,14 @@ See ./task3.py
 
 ## Task 4
 
-### a) Decision Tree
+### a) Decision tree
 
 ![Decision tree with LightGBM model](./images/tree.png)
 
 ### b) Confusion Matrix
+
+![Confusion Matrix for training data](./images/confusion_matrix_training_data.png)
+
+![Confusion Matrix for evaluation data](./images/confusion_matrix_evaluation_data.png)
 
 ![Confusion Matrix for test data](./images/confusion_matrix_test_data.png)
