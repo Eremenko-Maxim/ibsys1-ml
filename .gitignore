@@ -173,8 +173,9 @@ cython_debug/
 #ai training data
 Test00.txt
 
-#task pdf
+#task and result pdf
 Prozess Forensik.pdf
+results.pdf
 
 #image files
 /images

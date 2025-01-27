@@ -2,6 +2,8 @@
 
 <!-- View with [ctrl]+[shift]+[v] -->
 
+Link to [GitHub Repository](https://github.com/Eremenko-Maxim/ibsys1-ml)
+
 ## Task 1
 
 ### a) Features and their values
@@ -35,22 +37,47 @@
 
 ## Task 2
 
-See ./task2.py
+See file ./task2.py in project root directory
 
 ## Task 3
 
-See ./task3.py
+See file ./task3.py in project root directory
 
 ## Task 4
 
 ### a) Decision tree
 
+#### LightGBM model (tree index=0)
+
 ![Decision tree with LightGBM model](./images/tree.png)
+
+#### RandomForestClassifier model (depth=3)
+
+![Decision tree with RandomForestClassifier model](./images/rf_tree_with_depth_3.png)
 
 ### b) Confusion Matrix
 
-![Confusion Matrix for training data](./images/confusion_matrix_training_data.png)
+#### LightGBM model
 
-![Confusion Matrix for evaluation data](./images/confusion_matrix_evaluation_data.png)
+![LightGBM Confusion Matrix for training data](./images/confusion_matrix_training_data.png)
 
-![Confusion Matrix for test data](./images/confusion_matrix_test_data.png)
+![LightGBM Confusion Matrix for evaluation data](./images/confusion_matrix_evaluation_data.png)
+
+![LightGBM Confusion Matrix for test data](./images/confusion_matrix_test_data.png)
+
+#### RandomForestClassifier model
+
+![RandomForestClassifier Confusion Matrix for training data](./images/rf_confusion_matrix_training_data.png)
+
+![RandomForestClassifier Confusion Matrix for evaluation data](./images/rf_confusion_matrix_evaluation_data.png)
+
+![RandomForestClassifier Confusion Matrix for test data](./images/rf_confusion_matrix_test_data.png)
+
+## Task 5
+
+All the features near the root of the decision tree are of great importance; these include feature No. 4, 5, and 6, to name a few.
+Generally, there is a difference in the results depending on which model has been used. The RandomForestClassifier has proven to be more accurate, despite being primarily intended for ordinal data.
+Using the RandomForestClassifier model, there are only false positives in small numbers and no false negatives.
+With the LightGBM model, there are false positives and false negatives in roughly equal proportions.
+Since the data was received all at once, split randomly, and no timestamps for the rows were provided, there is no reason to expect concept drift or shift. This is reflected in the confusion matrices.
+Regarding an early warning system, according to the decision tree from the RandomForestClassifier model, the value of feature No. 4 is of great importance. Therefore, it would be useful to monitor this process step.
